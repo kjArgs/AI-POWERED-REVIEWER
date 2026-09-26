@@ -30,8 +30,8 @@ results?.forEach((result) => {
 
 if (error) {
   console.error("Migration failed");
-  console.error(error);
-  process.exit(1);
+  console.error(error instanceof Error ? error.message : 'Unknown migration error');
+  process.exitCode = 1;
 }
 
 await db.destroy();
