@@ -6,7 +6,7 @@ export interface Database {
     filename: string;
     title: string | null;
     extracted_text: string | null;
-    created_at: string | null;
+    created_at: Generated<Date>;
   };
   document_chunks: {
     id: Generated<number>;
@@ -14,12 +14,12 @@ export interface Database {
     chunk_index: number;
     content: string;
     embedding: string | null;
-    created_at: string | null;
+    created_at: Generated<Date>;
   };
   summaries: {
     id: Generated<number>;
     document_id: number;
     content: string;
-    created_at: string | null;
+    created_at: Generated<Date>;
   };
 }

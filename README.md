@@ -1,5 +1,7 @@
 # AI Study Helper — Phase 1 & 2 MVP
 
+Backend implementation and run instructions: [backend/README.md](backend/README.md).
+
 ## 1. MVP Goal
 
 Build an AI-powered study helper that allows students to:

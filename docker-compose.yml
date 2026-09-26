@@ -1,0 +1,18 @@
+services:
+  db:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_USER: study
+      POSTGRES_PASSWORD: study
+      POSTGRES_DB: study_helper
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - study_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U study -d study_helper"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+volumes:
+  study_data:
