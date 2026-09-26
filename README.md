@@ -1,6 +1,7 @@
 # AI Study Helper — Phase 1 & 2 MVP
 
 Backend implementation and run instructions: [backend/README.md](backend/README.md).
+React frontend and run instructions: [frontend/README.md](frontend/README.md).
 
 ## 1. MVP Goal
 

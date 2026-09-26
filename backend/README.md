@@ -1,6 +1,6 @@
 # AI Study Helper backend
 
-Express + TypeScript API implementing the modules in `src/docs/modules.md`. It stores document text, summaries, and 768-dimensional embeddings in PostgreSQL, extracts PDF text with `pdf-parse`, and uses Gemini for summaries, multiple-choice questions, and document chat.
+Express + TypeScript API implementing the modules in `src/docs/modules.md`. It stores document text, summaries, and 768-dimensional embeddings in PostgreSQL, extracts PDF text with `pdf-parse`, and uses Ollama Cloud for summaries, multiple-choice questions, document chat, and embeddings.
 
 ## Run locally
 
@@ -20,7 +20,7 @@ From `backend`:
 npm ci
 ```
 
-Create `.env` from `.env.example` if it does not already exist. Keep existing credentials when editing an existing file. Set `DATABASE_URL` to an existing database and set `GEMINI_API_KEY` to a valid Gemini API key. The Compose database URL is shown in `.env.example`.
+Create `.env` from `.env.example` if it does not already exist. Keep existing credentials when editing an existing file. Set `DATABASE_URL` to an existing database and set `OLLAMA_API_KEY` to a valid Ollama Cloud API key. The Compose database URL is shown in `.env.example`.
 
 ```sh
 npm run migrate
@@ -41,17 +41,18 @@ The API defaults to `http://localhost:3000`. `GET /health` reports process healt
 
 ## Configuration
 
-| Variable | Default / purpose |
-| --- | --- |
-| `DATABASE_URL` | Required PostgreSQL connection URL |
-| `GEMINI_API_KEY` | Required API key |
-| `PORT` | `3000` |
-| `GEMINI_MODEL` | `gemini-2.5-flash` |
-| `GEMINI_EMBEDDING_MODEL` | `gemini-embedding-2`; also supports `gemini-embedding-001` |
-| `CHAT_MODE` | `rag`; use `basic` for full-document chat without embeddings |
-| `CORS_ORIGIN` | `http://localhost:5173` |
-| `MAX_UPLOAD_MB` | `10` (maximum 50) |
-| `MAX_DOCUMENT_CHARS` | `200000` (maximum 1000000) |
+| Variable                 | Default / purpose                                            |
+| ------------------------ | ------------------------------------------------------------ |
+| `DATABASE_URL`           | Required PostgreSQL connection URL                           |
+| `OLLAMA_API_KEY`         | Required Ollama Cloud API key                                |
+| `OLLAMA_BASE_URL`        | `https://ollama.com/api`                                     |
+| `PORT`                   | `3000`                                                       |
+| `OLLAMA_MODEL`           | `gemma4:31b`                                                 |
+| `OLLAMA_EMBEDDING_MODEL` | `embeddinggemma` (must return 768 dimensions)                |
+| `CHAT_MODE`              | `rag`; use `basic` for full-document chat without embeddings |
+| `CORS_ORIGIN`            | `http://localhost:5173`                                      |
+| `MAX_UPLOAD_MB`          | `10` (maximum 50)                                            |
+| `MAX_DOCUMENT_CHARS`     | `200000` (maximum 1000000)                                   |
 
 RAG mode embeds chunks during upload and saves the document and all chunks in one transaction after embedding succeeds. Basic mode stores documents without embeddings. Documents uploaded in basic mode must be re-uploaded with RAG enabled before RAG chat can use them. Also re-upload documents after changing embedding models: different models produce incompatible vector spaces even with the same dimensions.
 
@@ -59,19 +60,19 @@ The embedding configuration follows [Google's task formatting and dimensionality
 
 ## API
 
-| Method | Route | Input / result |
-| --- | --- | --- |
-| GET | `/health` | Process health |
-| GET | `/health/ready` | Database readiness |
-| POST | `/api/documents` | Multipart `file` (PDF), optional `title`; returns document, 201 |
-| GET | `/api/documents?limit=20&offset=0` | Paginated metadata, newest first |
-| GET | `/api/documents/:id` | Document including extracted text |
-| PATCH | `/api/documents/:id` | JSON `{ "title": "New title" }` |
-| DELETE | `/api/documents/:id` | Deletes document, summaries, and chunks; returns 204 |
-| POST | `/api/documents/:id/summary` | Generates and saves a summary; returns 201 |
-| GET | `/api/documents/:id/summary` | Latest saved summary |
-| POST | `/api/documents/:id/questions` | Five questions with four choices and answer letter |
-| POST | `/api/documents/:id/chat` | JSON `{ "question": "What is photosynthesis?" }` |
+| Method | Route                              | Input / result                                                  |
+| ------ | ---------------------------------- | --------------------------------------------------------------- |
+| GET    | `/health`                          | Process health                                                  |
+| GET    | `/health/ready`                    | Database readiness                                              |
+| POST   | `/api/documents`                   | Multipart `file` (PDF), optional `title`; returns document, 201 |
+| GET    | `/api/documents?limit=20&offset=0` | Paginated metadata, newest first                                |
+| GET    | `/api/documents/:id`               | Document including extracted text                               |
+| PATCH  | `/api/documents/:id`               | JSON `{ "title": "New title" }`                                 |
+| DELETE | `/api/documents/:id`               | Deletes document, summaries, and chunks; returns 204            |
+| POST   | `/api/documents/:id/summary`       | Generates and saves a summary; returns 201                      |
+| GET    | `/api/documents/:id/summary`       | Latest saved summary                                            |
+| POST   | `/api/documents/:id/questions`     | Five questions with four choices and answer letter              |
+| POST   | `/api/documents/:id/chat`          | JSON `{ "question": "What is photosynthesis?" }`                |
 
 Upload using PowerShell (`curl.exe` avoids the PowerShell `curl` alias):
 
@@ -85,7 +86,12 @@ Invoke-RestMethod -Method Post http://localhost:3000/api/documents/1/chat -Conte
 Summary response:
 
 ```json
-{ "documentId": 1, "summary": "Plants convert sunlight into chemical energy.", "id": 1, "createdAt": "2026-09-26T00:00:00.000Z" }
+{
+  "documentId": 1,
+  "summary": "Plants convert sunlight into chemical energy.",
+  "id": 1,
+  "createdAt": "2026-09-26T00:00:00.000Z"
+}
 ```
 
 RAG chat returns `documentId`, `answer`, `mode: "rag"`, and `sources` containing retrieved chunk IDs, zero-based `chunk_index`, content, and cosine similarity. Prompt citations use one-based `[Chunk N]` labels. Sources are the context supplied to Gemini; they are not independently verified claim-level citations. Basic chat returns `mode: "basic"` and an empty sources array. Chat requests are independent; conversation history is not persisted.
