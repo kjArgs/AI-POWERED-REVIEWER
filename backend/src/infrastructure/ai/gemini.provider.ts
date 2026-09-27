@@ -1,22 +1,40 @@
 import { GoogleGenAI, Type } from '@google/genai';
 import { z } from 'zod';
-import type { AIProvider, Question } from './ai.provider.js';
+import type { AIProvider, QuestionSet } from './ai.provider.js';
 import { AppError } from '../../shared/errors/app-error.js';
 import { summaryPrompt } from './prompts/summary.prompt.js';
 import { questionPrompt } from './prompts/question.prompt.js';
 import { chatPrompt } from './prompts/chat.prompt.js';
 
-const questionsSchema = z
-  .array(
-    z.object({
-      question: z.string().trim().min(1),
-      choices: z.array(z.string().trim().min(1)).length(4),
-      answer: z.enum(['A', 'B', 'C', 'D']),
-    }),
-  )
-  .length(5);
+const questionsSchema = z.object({
+  multiple_choice: z
+    .array(
+      z.object({
+        question: z.string().trim().min(1),
+        choices: z.array(z.string().trim().min(1)).length(4),
+        answer: z.enum(['A', 'B', 'C', 'D']),
+      }),
+    )
+    .length(5),
+  enumeration: z
+    .array(
+      z.object({
+        question: z.string().trim().min(1),
+        answer: z.array(z.string().trim().min(1)).min(1),
+      }),
+    )
+    .length(5),
+  explanation: z
+    .array(
+      z.object({
+        question: z.string().trim().min(1),
+        answer: z.string().trim().min(1),
+      }),
+    )
+    .length(5),
+});
 
-export function parseQuestions(text: string): Question[] {
+export function parseQuestions(text: string): QuestionSet {
   try {
     return questionsSchema.parse(JSON.parse(text));
   } catch {
@@ -47,21 +65,59 @@ export class GeminiProvider implements AIProvider {
             ? {
                 responseMimeType: 'application/json',
                 responseSchema: {
-                  type: Type.ARRAY,
-                  minItems: 5,
-                  maxItems: 5,
-                  items: {
-                    type: Type.OBJECT,
-                    required: ['question', 'choices', 'answer'],
-                    properties: {
-                      question: { type: Type.STRING },
-                      choices: {
-                        type: Type.ARRAY,
-                        minItems: 4,
-                        maxItems: 4,
-                        items: { type: Type.STRING },
+                  type: Type.OBJECT,
+                  required: ['multiple_choice', 'enumeration', 'explanation'],
+                  properties: {
+                    multiple_choice: {
+                      type: Type.ARRAY,
+                      minItems: 5,
+                      maxItems: 5,
+                      items: {
+                        type: Type.OBJECT,
+                        required: ['question', 'choices', 'answer'],
+                        properties: {
+                          question: { type: Type.STRING },
+                          choices: {
+                            type: Type.ARRAY,
+                            minItems: 4,
+                            maxItems: 4,
+                            items: { type: Type.STRING },
+                          },
+                          answer: {
+                            type: Type.STRING,
+                            enum: ['A', 'B', 'C', 'D'],
+                          },
+                        },
                       },
-                      answer: { type: Type.STRING, enum: ['A', 'B', 'C', 'D'] },
+                    },
+                    enumeration: {
+                      type: Type.ARRAY,
+                      minItems: 5,
+                      maxItems: 5,
+                      items: {
+                        type: Type.OBJECT,
+                        required: ['question', 'answer'],
+                        properties: {
+                          question: { type: Type.STRING },
+                          answer: {
+                            type: Type.ARRAY,
+                            items: { type: Type.STRING },
+                          },
+                        },
+                      },
+                    },
+                    explanation: {
+                      type: Type.ARRAY,
+                      minItems: 5,
+                      maxItems: 5,
+                      items: {
+                        type: Type.OBJECT,
+                        required: ['question', 'answer'],
+                        properties: {
+                          question: { type: Type.STRING },
+                          answer: { type: Type.STRING },
+                        },
+                      },
                     },
                   },
                 },

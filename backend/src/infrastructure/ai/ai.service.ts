@@ -1,4 +1,4 @@
-import type { AIProvider, Question } from "./ai.provider.js";
+import type { AIProvider, QuestionSet } from './ai.provider.js';
 
 export class AIService {
   constructor(private readonly provider: AIProvider) {}
@@ -7,7 +7,7 @@ export class AIService {
     return this.provider.summarize(text);
   }
 
-  async generateQuestions(text: string): Promise<Question[]> {
+  async generateQuestions(text: string): Promise<QuestionSet> {
     return this.provider.generateQuestions(text);
   }
 
