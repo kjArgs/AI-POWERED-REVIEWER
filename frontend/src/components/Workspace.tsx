@@ -251,12 +251,74 @@ export function Workspace({
                 <div>
                   <span className="section-kicker">THE ESSENTIALS</span>
                   <h2>The big picture.</h2>
-                  <p>A clear overview to help the important ideas fall into place.</p>
+                  <p>
+                    A clear overview to help the important ideas fall into
+                    place.
+                  </p>
                 </div>
-                {summary && <button className="button secondary compact" disabled={summaryBusy || summaryLoading} onClick={() => void generateSummary()}><RotateCcw size={15} />Regenerate</button>}
+                {summary && (
+                  <button
+                    className="button secondary compact"
+                    disabled={summaryBusy || summaryLoading}
+                    onClick={() => void generateSummary()}
+                  >
+                    <RotateCcw size={15} />
+                    Regenerate
+                  </button>
+                )}
               </div>
-              {summaryError && <ErrorNotice retry={() => setRevision(value => value + 1)}>{summaryError}</ErrorNotice>}
-              {summaryLoading ? <div className="panel-loading"><Spinner label="Checking for a saved summary…" /></div> : summary ? <div className="summary-content"><div className="summary-meta"><span><Check size={14} />Saved · {dateOf(summary.createdAt)}</span><button className="text-button" onClick={() => void copySummary()}><Copy size={14} />Copy</button></div>{copyStatus && <p role="status" className="field-help">{copyStatus}</p>}<Prose>{summary.summary}</Prose></div> : <div className="tool-empty"><span className="tool-icon"><FileText size={28} strokeWidth={1.3} /></span><h3>Less reading between the lines.</h3><p>Get a focused summary of your document’s main ideas<br className="desktop-break" /> and the details worth remembering.</p><button className="button primary" disabled={summaryBusy} onClick={() => void generateSummary()}><Sparkles size={16} />Generate summary</button></div>}
+              {summaryError && (
+                <ErrorNotice retry={() => setRevision((value) => value + 1)}>
+                  {summaryError}
+                </ErrorNotice>
+              )}
+              {summaryLoading ? (
+                <div className="panel-loading">
+                  <Spinner label="Checking for a saved summary…" />
+                </div>
+              ) : summary ? (
+                <div className="summary-content">
+                  <div className="summary-meta">
+                    <span>
+                      <Check size={14} />
+                      Saved · {dateOf(summary.createdAt)}
+                    </span>
+                    <button
+                      className="text-button"
+                      onClick={() => void copySummary()}
+                    >
+                      <Copy size={14} />
+                      Copy
+                    </button>
+                  </div>
+                  {copyStatus && (
+                    <p role="status" className="field-help">
+                      {copyStatus}
+                    </p>
+                  )}
+                  <Prose>{summary.summary}</Prose>
+                </div>
+              ) : (
+                <div className="tool-empty">
+                  <span className="tool-icon">
+                    <FileText size={28} strokeWidth={1.3} />
+                  </span>
+                  <h3>Less reading between the lines.</h3>
+                  <p>
+                    Get a focused summary of your document’s main ideas
+                    <br className="desktop-break" /> and the details worth
+                    remembering.
+                  </p>
+                  <button
+                    className="button primary"
+                    disabled={summaryBusy}
+                    onClick={() => void generateSummary()}
+                  >
+                    <Sparkles size={16} />
+                    Generate summary
+                  </button>
+                </div>
+              )}
               {summaryBusy && (
                 <div className="operation-status">
                   <Spinner label="Finding the essentials…" />
@@ -581,8 +643,26 @@ function PracticeContent({
               </span>
               {question.question}
             </h3>
-            <textarea aria-label={`Enumeration answer ${index + 1}`} rows={3} value={answers[`enumeration-${index}`] ?? ''} disabled={revealed || questionsBusy} onChange={(event) => onAnswer(`enumeration-${index}`, event.target.value)} placeholder="Write your answer..." />
-            {revealed && <div className="answer-feedback"><strong>Expected answer</strong><ol>{question.answer.map((answer) => <li key={answer}>{answer}</li>)}</ol></div>}
+            <textarea
+              aria-label={`Enumeration answer ${index + 1}`}
+              rows={3}
+              value={answers[`enumeration-${index}`] ?? ''}
+              disabled={revealed || questionsBusy}
+              onChange={(event) =>
+                onAnswer(`enumeration-${index}`, event.target.value)
+              }
+              placeholder="Write your answer..."
+            />
+            {revealed && (
+              <div className="answer-feedback">
+                <strong>Expected answer</strong>
+                <ol>
+                  {question.answer.map((answer) => (
+                    <li key={answer}>{answer}</li>
+                  ))}
+                </ol>
+              </div>
+            )}
           </article>
         ))}
       </div>
@@ -596,8 +676,23 @@ function PracticeContent({
               </span>
               {question.question}
             </h3>
-            <textarea aria-label={`Explanation answer ${index + 1}`} rows={4} value={answers[`explanation-${index}`] ?? ''} disabled={revealed || questionsBusy} onChange={(event) => onAnswer(`explanation-${index}`, event.target.value)} placeholder="Write your explanation..." />
-            {revealed && <p className="answer-feedback"><strong>Expected answer</strong><br />{question.answer}</p>}
+            <textarea
+              aria-label={`Explanation answer ${index + 1}`}
+              rows={4}
+              value={answers[`explanation-${index}`] ?? ''}
+              disabled={revealed || questionsBusy}
+              onChange={(event) =>
+                onAnswer(`explanation-${index}`, event.target.value)
+              }
+              placeholder="Write your explanation..."
+            />
+            {revealed && (
+              <p className="answer-feedback">
+                <strong>Expected answer</strong>
+                <br />
+                {question.answer}
+              </p>
+            )}
           </article>
         ))}
       </div>
@@ -616,7 +711,10 @@ function PracticeContent({
           </>
         ) : (
           <>
-            <span>{Object.keys(answers).length} of {questions.multiple_choice.length} answered</span>
+            <span>
+              {Object.keys(answers).length} of{' '}
+              {questions.multiple_choice.length} answered
+            </span>
             <button
               className="button primary"
               disabled={questionsBusy}
